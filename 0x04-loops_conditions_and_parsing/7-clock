@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # Print 24 hours of a day
 
-i=0
-j=0
-while ((i < 24)); do
-	echo Hour: $i
-	j=0
-	while ((j < 60)); do
-		if ((j < 10)); then
-			echo 0$j
+k=0
+l=0
+while ((k < 24)); do
+	echo Hour: $k
+	l=0
+	while ((l < 60)); do
+		if ((l < 10)); then
+			echo 0$l
 		else
-			echo $j
+			echo $l
 		fi
-		j=$((j+1))
+		l=$((l+1))
 	done
-	i=$((i+1))
+	k=$((k+1))
 done
