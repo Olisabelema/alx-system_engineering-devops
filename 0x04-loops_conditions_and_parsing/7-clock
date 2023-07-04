@@ -2,16 +2,12 @@
 # Print 24 hours of a day
 
 k=0
-l=0
+l=1
 while ((k < 24)); do
 	echo Hour: $k
-	l=0
+	l=1
 	while ((l < 60)); do
-		if ((l < 10)); then
-			echo 0$l
-		else
-			echo $l
-		fi
+		echo $l
 		l=$((l+1))
 	done
 	k=$((k+1))
