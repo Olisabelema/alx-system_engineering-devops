@@ -4,4 +4,4 @@
 # ifconfig | sed -n '/inet /{s/inet //;s/\s*netmask.*//;s/^[ \t]*//;p}'
 
 # This also works but more comprehensible
-ifconfig | sed -n '/inet /p' | tr -d 'inet ' | cut -d 'm' -f 1
+ifconfig | sed -n '/inet /p' | tr -d 'inet ' | cut -d 'm' -f 
