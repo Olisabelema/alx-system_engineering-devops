@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
-# Check if the script is running in Docker
+# Configure DNS resolution using the custom hosts file
 
-if [ -f /.dockerenv ]; then
-  echo "Running inside Docker, modifying /etc/hosts..."
-  
-  # Update /etc/hosts to map localhost to 127.0.0.2
-  sed -i 's/127.0.0.1\tlocalhost/127.0.0.2\tlocalhost/g' /etc/hosts
-  
-  # Add an entry to /etc/hosts to map facebook.com to 8.8.8.8
-  echo "8.8.8.8 facebook.com" >> /etc/hosts
-  
-  # Print the updated /etc/hosts file
-  cat /etc/hosts
-else
-  echo "This script should be run inside Docker."
-  exit 1
-fi
+cp /etc/hosts ~/hosts.new
+sed -i "s/^127[0-9.]*\slocalhost/127.0.0.2 localhost/" ~/hosts.new
+sed -i "$ a\8.8.8.8 facebook.com" ~/hosts.new
+cp -f ~/hosts.new /etc/hosts
