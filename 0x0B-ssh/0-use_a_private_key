@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# This script connects to the server using SSH with a private key.
+# This script uses ssh to connect to the server using the private key ~/.ssh/school with the user ubuntu.
 
-# Use ssh with the -i flag to specify the
-# private key file and the target user@host.
-ssh -i ~/.ssh/school ubuntu@54.237.54.19
+# Use ssh with the -i flag to specify the private key file and the target user@host.
+ssh -i ~/.ssh/school ubuntu@54.160.123.28
