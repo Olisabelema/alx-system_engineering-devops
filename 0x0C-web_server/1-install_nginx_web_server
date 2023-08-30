@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Update the package list and install nginx with the -y flag for automatic confirmation
+sudo apt-get update
+sudo apt-get install -y nginx
+
+# Configure nginx to listen on port 80 and return "Hello World!" for GET requests to /
+echo "Hello World!" > /var/www/html/index.html
+
+# Restart nginx without using systemctl
+sudo service nginx restart
