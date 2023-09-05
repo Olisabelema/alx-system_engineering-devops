@@ -1,51 +1,35 @@
-#setup nginx web server with puppet
-
-$file_content="
-server {
-	listen 80 default_server;
-	add_header X-Served-By ${hostname};
-
-	root /var/www/html;
-	index index.html;
-
-	error_page 404 /404.html;
-	location = /404.html {
-		internal;
-	}
-
-	location /redirect_me {
-		return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-	}
+# puppet manifest creating a custom HTTP header response
+exec { 'apt-get-update':
+  command => '/usr/bin/apt-get update',
 }
-"
 
 package { 'nginx':
-  ensure   => 'installed',
-  provider => 'apt',
+  ensure  => installed,
+  require => Exec['apt-get-update'],
 }
 
-file {'/var/www/html/index.html':
-ensure  => file,
-content => 'Hello World!
-',
-require => Package['nginx']
+file_line { 'a':
+  ensure  => 'present',
+  path    => '/etc/nginx/sites-available/default',
+  after   => 'listen 80 default_server;',
+  line    => 'rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;',
+  require => Package['nginx'],
 }
 
-file {'/var/www/html/404.html':
-ensure  => file,
-content => "Ceci n'est pas une page
-",
-require => File['/var/www/html/index.html']
+file_line { 'b':
+  ensure  => 'present',
+  path    => '/etc/nginx/sites-available/default',
+  after   => 'listen 80 default_server;',
+  line    => 'add_header X-Served-By $hostname;',
+  require => Package['nginx'],
 }
 
-file {'/etc/nginx/sites-enabled/default':
-ensure  => file,
-content => $file_content,
-require => File['/var/www/html/404.html']
+file { '/var/www/html/index.html':
+  content => 'Hello World!',
+  require => Package['nginx'],
 }
 
-exec {'nginx-restart':
-command  => 'service nginx restart',
-provider => 'shell',
-require  => File['/etc/nginx/sites-enabled/default']
+service { 'nginx':
+  ensure  => running,
+  require => Package['nginx'],
 }
