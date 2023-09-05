@@ -1,43 +1,14 @@
 #!/usr/bin/env bash
-# This Script Install and configure HAproxy on your lb-01 server
-
-sudo apt-get update &>/dev/null
-# checking if haproxy is installed
-if ! command -v haproxy; then
-        echo "Installing HAproxy..."
-        sudo apt-get -y install --no-install-recommends software-properties-common &>/dev/null
-        sudo add-apt-repository -y ppa:vbernat/haproxy-2.8 &>/dev/null 
-        sudo apt-get -y install haproxy=2.8.\* &>/dev/null
-fi
-# configuring the Haproxy
-if ! sudo cat /etc/haproxy/haproxy.cfg | grep -q "backend servers"; then
-        # creating a backup of the default haproxy.cfg
-        sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
-        # adding backend and frontend config
-        echo "adding backend and frontend configurations...."
-        sudo sh -c 'echo "
-        frontend http-in
-                bind *:80
-                default_backend servers
-
-        backend servers
-                balance roundrobin
-                server 266761-web-01 100.25.165.191:80 check
-                server 266761-web-02 3.83.245.148:80 check
-        " >> /etc/haproxy/haproxy.cfg'
-fi
-
-# testing the HAproxy config
-echo "Testing HAproxy config...."
-if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
-        echo "HAproxy config is OK"
-else
-        echo -e"HAproxy config is NOT OK\nCheck the log files for more details"
-        exit 1
-fi
-
-# Restarts HAproxy
-echo "Restarting HAproxy..."
-sudo service haproxy restart &>/dev/null
-
-echo "All Done"
+# install haproxy
+SETUP="frontend http-in
+	bind *:80
+	default_backend servers
+backend servers
+	balance roundrobin
+	server 266761-web-01 100.25.165.191:80 check
+	server 266761-web-02 3.83.245.148:80 check
+"
+apt-get -y update
+apt-get -y install haproxy
+echo "$SETUP" >> /etc/haproxy/haproxy.cfg
+service haproxy restart
