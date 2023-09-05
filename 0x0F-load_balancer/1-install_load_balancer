@@ -1,14 +1,50 @@
 #!/usr/bin/env bash
-# install haproxy
-SETUP="frontend http-in
-	bind *:80
-	default_backend servers
+# This Script Install and configure HAproxy on your lb-01 server
+
+# update the package index
+sudo apt update &>/dev/null
+
+# install HAproxy if not already installed
+if ! command -v haproxy &> /dev/null; then
+	echo "Installing HAproxy..."
+	sudo apt install haproxy -y &>/dev/null
+fi
+
+# add our frontend and backend configs
+if ! sudo cat /etc/haproxy/haproxy.cfg | grep -q "backend servers"; then
+	# create backup of default config file
+	echo "Creating backup of default haproxy config file..."
+    	sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
+
+    	echo "Adding frontend and backend configs..."
+    	sudo sh -c 'echo "
+frontend http-in
+        bind *:80
+        mode http
+        default_backend servers
+
 backend servers
-	balance roundrobin
-	server 266761-web-01 100.25.165.191:80 check
-	server 266761-web-02 3.83.245.148:80 check
-"
-apt-get -y update
-apt-get -y install haproxy
-echo "$SETUP" >> /etc/haproxy/haproxy.cfg
-service haproxy restart
+        balance roundrobin
+        server 266761-web-01 100.25.165.191:80 check
+        server 266761-web-02 3.83.245.148:80 check
+" >> /etc/haproxy/haproxy.cfg'
+fi
+
+# test the HAproxy config
+echo "Testing HAproxy config..."
+if sudo haproxy -c -f /etc/haproxy/haproxy.cfg; then
+    	echo "HAproxy config is OK"
+else
+    	echo -e "HAproxy config is NOT OK\nCheck the log for more details"
+    	exit 1
+fi
+
+# make sure HAproxy starts on boot
+echo "Making sure HAproxy starts on boot..."
+sudo systemctl enable haproxy &>/dev/null
+
+# restart HAproxy
+echo "Restarting HAproxy..."
+sudo service haproxy restart &>/dev/null
+
+echo "All Done!"
