@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Debug and fix Nginx not listening on port 80 in an Ubuntu container.
+
+# Stop the oldest Nginx instance.
+pkill -o nginx;
+
+# Remove the problematic default config file.
+rm /etc/nginx/sites-enabled/default;
+
+# Create a symbolic link to the available config file.
+ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default;
+
+# Restart Nginx to apply the changes.
+service nginx restart;
