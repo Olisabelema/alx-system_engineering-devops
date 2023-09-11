@@ -57,4 +57,4 @@ backend servers
         server 266761-web-02 3.83.245.148:80 check
 
 backend letsencrypt-backend
-   server letsencrypt 127.0.0.1:54321
+   server letsencrypt 34.224.83.26:54321
