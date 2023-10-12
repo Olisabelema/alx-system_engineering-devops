@@ -1,50 +1,87 @@
 #!/usr/bin/python3
-"""Advanced Apis Module"""
+'''A module containing functions for working with the Reddit API.
+'''
 import requests
-import sys
 
 
-def count_words(subreddit, wordlist, hot_list=[], after=None,):
-    """function that queries the Reddit API and prints
-    the titles of the first 10 hot posts listed for a given subreddit."""
+def sort_histogram(histogram={}):
+    '''Sorts and prints the given histogram.
+    '''
+    histogram = list(filter(lambda kv: kv[1], histogram))
+    histogram_dict = {}
+    for item in histogram:
+        if item[0] in histogram_dict:
+            histogram_dict[item[0]] += item[1]
+        else:
+            histogram_dict[item[0]] = item[1]
+    histogram = list(histogram_dict.items())
+    histogram.sort(
+        key=lambda kv: kv[0],
+        reverse=False
+    )
+    histogram.sort(
+        key=lambda kv: kv[1],
+        reverse=True
+    )
+    res_str = '\n'.join(list(map(
+        lambda kv: '{}: {}'.format(kv[0], kv[1]),
+        histogram
+    )))
+    if res_str:
+        print(res_str)
 
-    headers = {"User-Agent": "user_agent"}
-    url = "https://www.reddit.com/r/{}/hot.json".format(
-        subreddit)
-    params = {"limit": 100, "after": after}
 
-    response = requests.get(
-        url=url,
-        headers=headers,
-        params=params,
-        allow_redirects=False)
-
-    if response.status_code == 200:
-        data = response.json()['data']
-        children = data['children']
-        hot_list.extend([child['data']['title']
-                         for child in children])
-        after = response.json()['data']['after']
-        if not after:
-            wordcounts = {}
-            search_str = " ".join(hot_list)
-            wordcounts = {word.lower(): search_str.lower().count(
-                word.lower()) for word in wordlist}
-            sorted_wordcounts = dict(
-                sorted(wordcounts.items(),
-                       key=lambda item: (-item[1], item[0])))
-            for key, value in sorted_wordcounts.items():
-                if value != 0:
-                    print("{}: {}".format(key, value))
-            return (0)
-        return count_words(subreddit, wordlist, hot_list, after)
+def count_words(subreddit, word_list, histogram=[], n=0, after=None):
+    '''Counts the number of times each word in a given wordlist
+    occurs in a given subreddit.
+    '''
+    api_headers = {
+        'Accept': 'application/json',
+        'User-Agent': ' '.join([
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            'AppleWebKit/537.36 (KHTML, like Gecko)',
+            'Chrome/97.0.4692.71',
+            'Safari/537.36',
+            'Edg/97.0.1072.62'
+        ])
+    }
+    sort = 'hot'
+    limit = 30
+    res = requests.get(
+        '{}/r/{}/.json?sort={}&limit={}&count={}&after={}'.format(
+            'https://www.reddit.com',
+            subreddit,
+            sort,
+            limit,
+            n,
+            after if after else ''
+        ),
+        headers=api_headers,
+        allow_redirects=False
+    )
+    if not histogram:
+        word_list = list(map(lambda word: word.lower(), word_list))
+        histogram = list(map(lambda word: (word, 0), word_list))
+    if res.status_code == 200:
+        data = res.json()['data']
+        posts = data['children']
+        titles = list(map(lambda post: post['data']['title'], posts))
+        histogram = list(map(
+            lambda kv: (kv[0], kv[1] + sum(list(map(
+                lambda txt: txt.lower().split().count(kv[0]),
+                titles
+            )))),
+            histogram
+        ))
+        if len(posts) >= limit and data['after']:
+            count_words(
+                subreddit,
+                word_list,
+                histogram,
+                n + len(posts),
+                data['after']
+            )
+        else:
+            sort_histogram(histogram)
     else:
-        return None
-
-
-if __name__ == '__main__':
-    if len(sys.argv) > 0:
-        subred = sys.argv[1]
-        if (len(sys.argv) > 1):
-            wordlist = sys.argv[2].split()
-        count_words(subred, wordlist, [])
+        return
